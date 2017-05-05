@@ -22,6 +22,8 @@ import org.codehaus.jettison.json.JSONException;
  */
 public class PaymentProcessor extends HttpServlet {
 
+    private String result="Error no decryption process";
+
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -40,10 +42,10 @@ public class PaymentProcessor extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet PaymentProcessor</title>");            
+            out.println("<title>Servlet PaymentProcessor</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet PaymentProcessor at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Payload Decrypted " + result + "</h1>");
             out.println("</body>");
             out.println("</html>");
         } finally {
@@ -78,22 +80,29 @@ public class PaymentProcessor extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        //Get the values from form and to send to backend service
         String payload = formatPayload(request.getParameter("payload"));
-        System.out.println("******".concat(payload));        
         String currency = request.getParameter("currency");
         String price = request.getParameter("price");
         String product = request.getParameter("product");
-        
-        PaymentDataHandler handler = new PaymentDataHandler(payload, product, currency, price);         
+
         try {
-            System.out.println(handler.doProcess());
+            //handler to decrypt payload
+            PaymentDataHandler handler = new PaymentDataHandler(payload, product, currency, price);
+            //save the result on a String to show on screen
+            result = handler.doProcess();
+            
+            processRequest(request, response);
         } catch (GeneralSecurityException ex) {
+            ex.printStackTrace();
             System.out.println("Error on decryption");
         } catch (JSONException ex) {
             System.out.println("Error on json");
+        } catch (Exception ex){
+            ex.printStackTrace();
+            System.out.println("Error on decrypt");
         }
-        processRequest(request, response);
-        
+
     }
 
     /**
@@ -105,10 +114,10 @@ public class PaymentProcessor extends HttpServlet {
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
-    
-    private String formatPayload(String payload){
+
+    private String formatPayload(String payload) {
         int index = payload.indexOf("currencyFormat\":\"currencyCode");
-        return payload.substring(0, index-2).concat("}}");
+        return payload.substring(0, index - 2).concat("}}");
     }
 
 }

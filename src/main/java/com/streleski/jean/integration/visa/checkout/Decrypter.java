@@ -14,8 +14,11 @@ import java.security.Security;
 import java.util.Arrays;
 import javax.crypto.Cipher;
 import javax.crypto.Mac;
+
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
+
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
 
@@ -39,16 +42,21 @@ public class Decrypter {
         }
     }
 
-    public static byte[] decrypt(byte[] key, byte[] data) throws GeneralSecurityException {
-        byte[] decodedData = Base64.decode(key);
+    public static byte[] decrypt(String encKey, String encPaymentData) throws GeneralSecurityException, Exception {
+       
+        byte[] decodedData = Base64.decode(encPaymentData);
+        byte[] key = Base64.decode(encKey);
         if (decodedData == null || decodedData.length <= IV_LENGTH) {
             throw new RuntimeException("Bad input data.");
         }
         byte[] hmac = new byte[HMAC_LENGTH];
         System.arraycopy(decodedData, 0, hmac, 0, HMAC_LENGTH);
+        
+        /* I tried to solve this point here but I could not understand why the arrays is not equals*/
         if (!Arrays.equals(hmac, hmac(key, decodedData, HMAC_LENGTH, decodedData.length - HMAC_LENGTH))) {
-            throw new RuntimeException("HMAC validation failed.");
+            throw new Exception("HMAC validation failed.");
         }
+        
         byte[] iv = new byte[IV_LENGTH];
         System.arraycopy(decodedData, HMAC_LENGTH, iv, 0, IV_LENGTH);
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM, bcProvider);

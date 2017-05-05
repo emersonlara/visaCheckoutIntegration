@@ -29,31 +29,26 @@ public class PaymentDataHandler {
         this.currency = currency;
         this.price = price;    
         try {        
+            //load the encrypted payload do Json Object
             payloadJson = new JSONObject(payload);
-            if (payloadJson !=null){
-                System.out.println(payloadJson.getString("encKey"));
-                System.out.println(payloadJson.getString("encPaymentData"));
-            }
         } catch (JSONException ex) {
             ex.printStackTrace();
-            System.out.println("Error no json");            
+            System.out.println("Error on json");            
         }
     }
     
-    public String doProcess() throws GeneralSecurityException, JSONException{
-        byte[] decryptedData = Decrypter.decrypt(payloadJson.getString("encKey").getBytes(), payloadJson.getString("encPaymentData").getBytes());
+    public String doProcess() throws GeneralSecurityException, JSONException, Exception{
+        //Decrypter
+        byte[] decryptedData = Decrypter.decrypt(payloadJson.getString("encKey"), payloadJson.getString("encPaymentData"));
+        //just as debug
         System.out.println(Arrays.toString(decryptedData));
+        //result
         return Arrays.toString(decryptedData);
         
         //APIRestClient apiClient = new APIRestClient();
         //return apiClient.getPaymentInformation(callId);        
     }
-    
-    private String getCallIdFromPayload(){
-        int index = payload.indexOf("callid")+9;        
-        return payload.substring(index, index+19);
-        
-    }
+
     
     
     
